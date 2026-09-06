@@ -20,9 +20,8 @@
     text-align:center;
   }
   .cake { font-size:54px; line-height:1; margin-bottom:10px; }
-  h1 { margin:0; font-size:30px; }
-  .sub { margin:7px 0 25px; color:#786b60; font-size:15px; }
-  label { display:block; text-align:left; font-weight:700; margin:0 0 8px; }
+  .sub { margin:7px 0 18px; color:#786b60; font-size:15px; }
+  label { display:block; text-align:left; font-weight:700; margin:20px 0 8px; }
   .input-wrap { position:relative; }
   input {
     width:100%; height:54px; padding:0 52px 0 16px;
@@ -37,7 +36,7 @@
   }
   .hint { text-align:left; font-size:13px; color:#8b7b6e; margin-top:7px; }
   #qr {
-    min-height:20px; margin:22px auto 14px;
+    min-height:20px; margin:4px auto 14px;
     display:flex; justify-content:center; align-items:center;
   }
   #qr canvas {
@@ -52,14 +51,23 @@
   }
   .details strong { color:#2b2118; }
   .error { color:#b3261e; min-height:20px; font-size:14px; margin-top:7px; }
+  .share-btn {
+    width:100%; height:52px; margin-top:12px;
+    border:none; border-radius:14px; background:#2b2118; color:#fff;
+    font-size:17px; font-weight:700; cursor:pointer;
+    font-family:inherit;
+  }
+  .share-btn:active { opacity:.85; }
+  .share-hint { font-size:12px; color:#9a8b7e; margin-top:8px; line-height:1.5; }
   .offline { margin-top:14px; font-size:12px; color:#9a8b7e; }
 </style>
 </head>
 <body>
 <main>
   <div class="cake">🍰</div>
-  <h1>Kuchen</h1>
   <div class="sub">Überweisung per QR-Code</div>
+
+  <div id="qr" aria-label="SEPA Überweisungs QR-Code"></div>
 
   <label for="amount">Betrag</label>
   <div class="input-wrap">
@@ -68,9 +76,10 @@
     <span class="euro">€</span>
   </div>
   <div class="hint">Der Betrag ist optional. Komma oder Punkt möglich.</div>
-
   <div id="error" class="error"></div>
-  <div id="qr" aria-label="SEPA Überweisungs QR-Code"></div>
+
+  <button id="share" class="share-btn" type="button">📤 In Banking-App öffnen</button>
+  <div class="share-hint">QR-Code teilen und in der Banking-App als Foto einlesen – oder als Bild speichern.</div>
 
   <div class="details">
     <strong>Henning Tarras</strong><br>
@@ -934,6 +943,7 @@ var qrcodegen;
   var amountEl = document.getElementById("amount");
   var qrEl = document.getElementById("qr");
   var errorEl = document.getElementById("error");
+  var shareEl = document.getElementById("share");
 
   // Betrag parsen: Komma und Punkt als Dezimalzeichen.
   // Enthält die Eingabe beide, ist das letzte Zeichen das Dezimalzeichen.
@@ -1007,7 +1017,46 @@ var qrcodegen;
     }
   }
 
+  function downloadQr(canvas){
+    var a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = "kuchen-ueberweisung.png";
+    document.body.appendChild(a);
+    a.click();
+    if(a.remove) a.remove();
+    else document.body.removeChild(a);
+  }
+
+  // QR als Bild teilen (Handy-Teilen-Menü, dort Banking-App wählen)
+  // oder als Datei speichern. Die Banking-App liest den Code als Foto ein.
+  function shareQr(){
+    var canvas = qrEl.querySelector ? qrEl.querySelector("canvas") : null;
+    if(!canvas){
+      errorEl.textContent = "Kein QR-Code vorhanden. Bitte zuerst einen gültigen Betrag eingeben.";
+      return;
+    }
+    if(!canvas.toBlob){ downloadQr(canvas); return; }
+    canvas.toBlob(function(blob){
+      if(!blob){ downloadQr(canvas); return; }
+      try{
+        var file = new File([blob], "kuchen-ueberweisung.png", {type: "image/png"});
+        if(navigator.canShare && navigator.canShare({files: [file]})){
+          navigator.share({
+            files: [file],
+            title: "Kuchen – Überweisung",
+            text: "SEPA-Überweisung per QR-Code"
+          }).catch(function(err){
+            if(!err || err.name !== "AbortError") downloadQr(canvas);
+          });
+          return;
+        }
+      }catch(e){ /* kein File-Sharing möglich -> Download */ }
+      downloadQr(canvas);
+    }, "image/png");
+  }
+
   amountEl.addEventListener("input", render);
+  shareEl.addEventListener("click", shareQr);
   render();
 })();
 </script>
