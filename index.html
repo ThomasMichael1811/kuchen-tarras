@@ -21,7 +21,7 @@
   }
   .cake { font-size:54px; line-height:1; margin-bottom:10px; }
   .sub { margin:7px 0 18px; color:#786b60; font-size:15px; }
-  label { display:block; text-align:left; font-weight:700; margin:20px 0 8px; }
+  label { display:block; text-align:left; font-weight:700; margin:0 0 8px; }
   .input-wrap { position:relative; }
   input {
     width:100%; height:54px; padding:0 52px 0 16px;
@@ -36,7 +36,7 @@
   }
   .hint { text-align:left; font-size:13px; color:#8b7b6e; margin-top:7px; }
   #qr {
-    min-height:20px; margin:4px auto 14px;
+    min-height:20px; margin:20px auto 14px;
     display:flex; justify-content:center; align-items:center;
   }
   #qr canvas {
@@ -51,6 +51,7 @@
   }
   .details strong { color:#2b2118; }
   .error { color:#b3261e; min-height:20px; font-size:14px; margin-top:7px; }
+  .scan-note { color:#b3261e; font-size:13px; font-weight:700; margin:10px 0 0; line-height:1.5; }
   .share-btn {
     width:100%; height:52px; margin-top:12px;
     border:none; border-radius:14px; background:#2b2118; color:#fff;
@@ -67,8 +68,6 @@
   <div class="cake">🍰</div>
   <div class="sub">Überweisung per QR-Code</div>
 
-  <div id="qr" aria-label="SEPA Überweisungs QR-Code"></div>
-
   <label for="amount">Betrag</label>
   <div class="input-wrap">
     <input id="amount" type="text" inputmode="decimal" autocomplete="off"
@@ -76,10 +75,13 @@
     <span class="euro">€</span>
   </div>
   <div class="hint">Der Betrag ist optional. Komma oder Punkt möglich.</div>
+
+  <div id="qr" aria-label="SEPA Überweisungs QR-Code"></div>
+  <div class="scan-note">⚠ Bitte in der Banking-App unter „GiroCode" oder „QR-Überweisung" scannen – nicht mit der Kamera-App.</div>
   <div id="error" class="error"></div>
 
   <button id="share" class="share-btn" type="button">📤 In Banking-App öffnen</button>
-  <div class="share-hint">QR-Code teilen und in der Banking-App als Foto einlesen – oder als Bild speichern.</div>
+  <div class="share-hint">Zum Selbstzahlen: QR-Code teilen und in der Banking-App als Foto einlesen – oder als Bild speichern.</div>
 
   <div class="details">
     <strong>Henning Tarras</strong><br>
@@ -937,6 +939,7 @@ var qrcodegen;
   "use strict";
 
   var IBAN = "DE47500105175401121921";
+  var BIC = "INGDDEFFXXX";
   var NAME = "Henning Tarras";
   var REMITTANCE = "Kuchen";
 
@@ -979,7 +982,7 @@ var qrcodegen;
 
   function epcPayload(){
     var amount = parseAmount(amountEl.value);
-    return ["BCD", "002", "1", "SCT", "", NAME, IBAN,
+    return ["BCD", "002", "1", "SCT", BIC, NAME, IBAN,
             amount ? "EUR" + amount : "", "", "", REMITTANCE].join("\n");
   }
 
